@@ -9,19 +9,25 @@ pipeline {
 				}
 			}
 		}
+
 		stage('ui tests - frontend') {
-			agent {
-				docker {
-					image 'node:20-alpine'
-					args '--user root'  // Запускаем контейнер от root
-				}
-			}
+			agent any  // Важно: НЕТ docker блока!
 			steps {
 				dir('bugtracker-frontend') {
 					sh '''
-						npm ci
-						npm test
-					'''
+                        # Проверяем Node.js
+                        echo "=== Node.js Check ==="
+                        node --version
+                        npm --version
+
+                        echo "=== Current Directory ==="
+                        pwd
+                        ls -la
+
+                        echo "=== Running Tests ==="
+                        npm ci --no-audit
+                        npm test
+                    '''
 				}
 			}
 		}
