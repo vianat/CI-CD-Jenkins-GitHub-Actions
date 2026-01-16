@@ -3,15 +3,13 @@ pipeline {
 
 	stages {
 		stage('Unit tests - backend') {
-			agent {
-				docker {
-					image 'snakee/golang-junit:1.21'
-					reuseNode true
-				}
-			}
 			steps {
 				dir('bugtracker-backend') {
-					sh 'go test -v ./...'
+					// Установи Go если нет в Jenkins контейнере
+					sh '''
+                        apt-get update && apt-get install -y golang || true
+                        go test -v ./...
+                    '''
 				}
 			}
 		}
