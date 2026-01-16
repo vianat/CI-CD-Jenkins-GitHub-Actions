@@ -2,20 +2,34 @@ pipeline {
 	agent any
 
 	stages {
+		stage('Setup tools') {
+			steps {
+				sh '''
+                    # Устанавливаем go-junit-report если нет
+                    if ! command -v go-junit-report &> /dev/null; then
+                        echo "Installing go-junit-report..."
+                        go install github.com/jstemmer/go-junit-report/v2@latest
+                        export PATH=$PATH:$(go env GOPATH)/bin
+                    fi
+                '''
+			}
+		}
+
 		stage('Unit tests - backend') {
 			steps {
 				dir('bugtracker-backend') {
 					sh '''
-						go test -v ./... 2>&1 | go-junit-report > test-results.xml'
+                        # Запускаем тесты с JUnit отчетом
+                        go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-						# generate coverage report
-						go test -coverprofile=coverage.out -covermode=atomic ./...
-						go tool cover -html=coverage.out -o coverage.html
+                        # Генерируем coverage отчет
+                        go test -coverprofile=coverage.out -covermode=atomic ./...
+                        go tool cover -html=coverage.out -o coverage.html
 
-						mkdir -p reports
-						mv coverage.html reports/
-
-					'''
+                        # Создаем директорию для отчетов
+                        mkdir -p reports
+                        mv coverage.html reports/
+                    '''
 				}
 			}
 			post {
@@ -30,11 +44,11 @@ pipeline {
 			}
 		}
 
-		stage('ui tests - frontend') {
-			agent any
+		stage('UI tests - frontend') {
 			steps {
 				dir('bugtracker-frontend') {
 					sh '''
+                        echo "=== Node.js versions ==="
                         node --version
                         npm --version
 
@@ -42,15 +56,20 @@ pipeline {
                         pwd
                         ls -la
 
-                        echo "=== Running Tests ==="
+                        echo "=== Installing dependencies ==="
                         npm ci --no-audit
-                        npm test
+
+                        echo "=== Running Tests ==="
+                        npm test -- --watchAll=false
+
+                        # Если фронтенд использует JUnit отчет, сгенерируй его
+                        # npm run test:ci
                     '''
 				}
 			}
 			post {
 				always {
-					junit 'bugtracker-frontend/test-results.xml'
+					junit 'bugtracker-frontend/**/test-results.xml'
 				}
 			}
 		}
