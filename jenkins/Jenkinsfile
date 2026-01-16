@@ -19,12 +19,14 @@ pipeline {
 				}
 			}
 			post {
-				junit 'bugtracker-backend/test-results.xml'
-				publishHTML target: [
-					reportDir: 'bugtracker-backend/reports',
-					reportFiles: 'coverage.html',
-					reportName: 'backend coverage report',
-				]
+				always {
+					junit 'bugtracker-backend/test-results.xml'
+					publishHTML target: [
+						reportDir: 'bugtracker-backend/reports',
+						reportFiles: 'coverage.html',
+						reportName: 'backend coverage report',
+					]
+				}
 			}
 		}
 
