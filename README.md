@@ -30,7 +30,7 @@ The easiest way to run the application is using Docker Compose:
 
 ```bash
 # Clone the repository
-git clone https://github.com/james-willett/bug-tracker.git
+git clone https://github.com/vianat/CI-CD-Jenkins-GitHub-Actions.git
 cd bug-tracker
 
 # Launch the application
