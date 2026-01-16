@@ -11,12 +11,10 @@ pipeline {
 		}
 
 		stage('ui tests - frontend') {
-			agent any  // Важно: НЕТ docker блока!
+			agent any
 			steps {
 				dir('bugtracker-frontend') {
 					sh '''
-                        # Проверяем Node.js
-                        echo "=== Node.js Check ==="
                         node --version
                         npm --version
 
@@ -28,6 +26,11 @@ pipeline {
                         npm ci --no-audit
                         npm test
                     '''
+				}
+			}
+			post {
+				always {
+					junit 'bugtracker-frontend/test-results.xml'
 				}
 			}
 		}
