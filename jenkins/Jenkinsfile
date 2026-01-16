@@ -5,11 +5,23 @@ pipeline {
 		stage('Unit tests - backend') {
 			steps {
 				dir('bugtracker-backend') {
-					// Установи Go если нет в Jenkins контейнере
+					sh 'go test -v ./...'
+				}
+			}
+		}
+		stage('ui tests - frontend') {
+			agent {
+				docker {
+					image 'node:20-alpine'
+					reuseNode true
+				}
+			}
+			steps {
+				dir('bugtracker-frontend') {
 					sh '''
-                        apt-get update && apt-get install -y golang || true
-                        go test -v ./...
-                    '''
+						npm ci
+						npm test
+					'''
 				}
 			}
 		}
