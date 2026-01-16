@@ -10,18 +10,15 @@ pipeline {
 			}
 		}
 		stage('ui tests - frontend') {
-			agent any
+			agent {
+				docker {
+					image 'node:20-alpine'
+					args '--user root'  // Запускаем контейнер от root
+				}
+			}
 			steps {
 				dir('bugtracker-frontend') {
 					sh '''
-						# Проверяем Node.js
-						if ! command -v node &> /dev/null; then
-							echo "Node.js не найден, устанавливаем..."
-							# Установка Node.js для Debian/Ubuntu
-							curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-							apt-get install -y nodejs
-						fi
-
 						npm ci
 						npm test
 					'''
