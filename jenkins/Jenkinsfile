@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     stages {
-        stage('Hello') {
+        stage('Unit tests - backend') {
             steps {
                 dir ('bugtracker-backend') {
                     go test -v ./...
