@@ -2,34 +2,20 @@ pipeline {
 	agent any
 
 	stages {
-		stage('Setup tools') {
-			steps {
-				sh '''
-                    # Устанавливаем go-junit-report если нет
-                    if ! command -v go-junit-report &> /dev/null; then
-                        echo "Installing go-junit-report..."
-                        go install github.com/jstemmer/go-junit-report/v2@latest
-                        export PATH=$PATH:$(go env GOPATH)/bin
-                    fi
-                '''
-			}
-		}
-
 		stage('Unit tests - backend') {
 			steps {
 				dir('bugtracker-backend') {
 					sh '''
-                        # Запускаем тесты с JUnit отчетом
-                        go test -v ./... 2>&1 | go-junit-report > test-results.xml
+						go test -v ./... 2>&1 | go-junit-report > test-results.xml'
 
-                        # Генерируем coverage отчет
-                        go test -coverprofile=coverage.out -covermode=atomic ./...
-                        go tool cover -html=coverage.out -o coverage.html
+						# generate coverage report
+						go test -coverprofile=coverage.out -covermode=atomic ./...
+						go tool cover -html=coverage.out -o coverage.html
 
-                        # Создаем директорию для отчетов
-                        mkdir -p reports
-                        mv coverage.html reports/
-                    '''
+						mkdir -p reports
+						mv coverage.html reports/
+
+					'''
 				}
 			}
 			post {
@@ -38,17 +24,17 @@ pipeline {
 					publishHTML target: [
 						reportDir: 'bugtracker-backend/reports',
 						reportFiles: 'coverage.html',
-						reportName: 'backend coverage report',
+						reportName: 'backend report',
 					]
 				}
 			}
 		}
 
 		stage('UI tests - frontend') {
+			agent any
 			steps {
 				dir('bugtracker-frontend') {
 					sh '''
-                        echo "=== Node.js versions ==="
                         node --version
                         npm --version
 
@@ -56,20 +42,22 @@ pipeline {
                         pwd
                         ls -la
 
-                        echo "=== Installing dependencies ==="
-                        npm ci --no-audit
-
                         echo "=== Running Tests ==="
-                        npm test -- --watchAll=false
-
-                        # Если фронтенд использует JUnit отчет, сгенерируй его
-                        # npm run test:ci
+                        npm ci --no-audit
+                        npm test
+                        mkdir -p reports
+                        mv coverage reports/
                     '''
 				}
 			}
 			post {
 				always {
-					junit 'bugtracker-frontend/**/test-results.xml'
+					junit 'bugtracker-frontend/test-results.xml'
+					publishHTML target: [
+						reportDir: 'bugtracker-frontend/reports',
+						reportFiles: 'coverage.html',
+						reportName: 'frontend report',
+					]
 				}
 			}
 		}
