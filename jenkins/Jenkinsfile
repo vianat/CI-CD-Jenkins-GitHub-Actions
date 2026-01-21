@@ -2,66 +2,81 @@ pipeline {
 	agent any
 
 	stages {
-		stage('Unit tests - backend') {
+		stage('Execute Unit Tests') {
 			parallel {
-				stage('Backend') {
+				stage('Unit Tests - Backend') {
+					agent {
+						docker {
+							image 'snakee/golang-junit:1.21'
+							reuseNode true
+							args '-e GOCACHE=/tmp/go-cache -e GOPATH=/tmp/go'
+						}
+					}
 					steps {
 						dir('bugtracker-backend') {
 							sh '''
-								go test -v ./... 2>&1 | go-junit-report > test-results.xml
+                            export GOCACHE=/tmp/go-cache
+                            export GOPATH=/tmp/go
 
-								go test -coverprofile=coverage.out -covermode=atomic ./...
-								go tool cover -html=coverage.out -o coverage.html
+                            go test ./... -v 2>&1 | go-junit-report > test-results.xml
 
-								mkdir -p reports
-								mv coverage.html reports/
-							'''
+                            go test -coverprofile=coverage.out -covermode=atomic ./...
+                            go tool cover -html=coverage.out -o coverage.html
+
+                            mkdir -p reports
+                            mv coverage.html reports/
+                            '''
 						}
 					}
 					post {
 						always {
 							junit 'bugtracker-backend/test-results.xml'
-							publishHTML target: [
+							publishHTML(target: [
+								allowMissing: false,
+								alwaysLinkToLastBuild: true,
+								keepAll: true,
 								reportDir: 'bugtracker-backend/reports',
 								reportFiles: 'coverage.html',
-								reportName: 'backend report',
-							]
+								reportName: 'Backend Coverage Report'
+							])
 						}
 					}
 				}
-				stage('UI tests - frontend') {
+
+				stage('Unit Tests - Frontend') {
+					agent {
+						docker {
+							image 'node:20-alpine'
+							reuseNode true
+						}
+					}
 					steps {
 						dir('bugtracker-frontend') {
 							sh '''
-								node --version
-								npm --version
-
-								echo "=== Current Directory ==="
-								pwd
-								ls -la
-
-								echo "=== Running Tests ==="
-								npm ci --no-audit
-								npm test
-								mkdir -p reports
-								mv coverage reports/
-							'''
+                            npm ci
+                            npm test
+                            mkdir -p reports
+                            mv coverage reports/
+                            '''
 						}
 					}
 					post {
 						always {
 							junit 'bugtracker-frontend/test-results.xml'
-							publishHTML target: [
-								reportDir: 'bugtracker-frontend/reports',
-								reportFiles: 'coverage.html',
-								reportName: 'frontend report',
-							]
+							publishHTML(target: [
+								allowMissing: false,
+								alwaysLinkToLastBuild: true,
+								keepAll: true,
+								reportDir: 'bugtracker-frontend/reports/coverage',
+								reportFiles: 'index.html',
+								reportName: 'Frontend Coverage Report'
+							])
 						}
 					}
 				}
 			}
 		}
-		stage('Launch app') {
+		stage('Launch Application') {
 			agent {
 				docker {
 					image 'docker:27.5.1'
