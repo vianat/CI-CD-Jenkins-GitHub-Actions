@@ -61,7 +61,7 @@ pipeline {
 							junit 'bugtracker-frontend/**/test-results.xml'
 							publishHTML target: [
 								reportDir: 'bugtracker-frontend/reports',
-								reportFiles: 'index.html',  # Usually index.html for frontend coverage
+								reportFiles: 'coverage.html',
 							reportName: 'Frontend Coverage Report'
 							]
 						}
