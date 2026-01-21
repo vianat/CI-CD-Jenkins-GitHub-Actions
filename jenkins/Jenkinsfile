@@ -2,22 +2,21 @@ pipeline {
 	agent any
 
 	stages {
-		stage('Run all tests in parallel') {
+		stage('Unit tests - backend') {
 			parallel {
-				stage('Backend tests') {
+				stage('Backend') {
 					steps {
 						dir('bugtracker-backend') {
 							sh '''
-                                # Run tests with JUnit report
-                                go test -v ./... 2>&1 | go-junit-report > test-results.xml
+								go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-                                # Generate coverage report
-                                go test -coverprofile=coverage.out -covermode=atomic ./...
-                                go tool cover -html=coverage.out -o coverage.html
+								# generate coverage report
+								go test -coverprofile=coverage.out -covermode=atomic ./...
+								go tool cover -html=coverage.out -o coverage.html
 
-                                mkdir -p reports
-                                mv coverage.html reports/
-                            '''
+								mkdir -p reports
+								mv coverage.html reports/
+							'''
 						}
 					}
 					post {
@@ -26,43 +25,37 @@ pipeline {
 							publishHTML target: [
 								reportDir: 'bugtracker-backend/reports',
 								reportFiles: 'coverage.html',
-								reportName: 'Backend Coverage Report'
+								reportName: 'backend report',
 							]
 						}
 					}
 				}
-
-				stage('Frontend tests') {
-					agent any
+				stage('UI tests - frontend') {
 					steps {
 						dir('bugtracker-frontend') {
 							sh '''
-                                echo "=== Node versions ==="
-                                node --version || echo "Node not installed"
-                                npm --version || echo "npm not installed"
+								node --version
+								npm --version
 
-                                echo "=== Current Directory ==="
-                                pwd
-                                ls -la
+								echo "=== Current Directory ==="
+								pwd
+								ls -la
 
-                                echo "=== Running Tests ==="
-                                npm ci --no-audit
-                                npm test
-
-                                # Assuming frontend generates coverage in 'coverage' directory
-                                mkdir -p reports
-                                cp -r coverage/* reports/ 2>/dev/null || echo "No coverage data"
-                            '''
+								echo "=== Running Tests ==="
+								npm ci --no-audit
+								npm test
+								mkdir -p reports
+								mv coverage reports/
+							'''
 						}
 					}
 					post {
 						always {
-							// Adjust path based on your frontend test runner
-							junit 'bugtracker-frontend/**/test-results.xml'
+							junit 'bugtracker-frontend/test-results.xml'
 							publishHTML target: [
 								reportDir: 'bugtracker-frontend/reports',
 								reportFiles: 'coverage.html',
-							reportName: 'Frontend Coverage Report'
+								reportName: 'frontend report',
 							]
 						}
 					}
