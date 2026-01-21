@@ -10,7 +10,6 @@ pipeline {
 							sh '''
 								go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-								# generate coverage report
 								go test -coverprofile=coverage.out -covermode=atomic ./...
 								go tool cover -html=coverage.out -o coverage.html
 
@@ -61,6 +60,23 @@ pipeline {
 					}
 				}
 			}
+		}
+		stage('Launch app') {
+			agent {
+				docker {
+					image 'docker:27.5.1'
+					reuseNode true
+					args '-v /var/run/docker.sock:/var/run/docker.sock -u 0'
+				}
+			}
+			steps {
+				sh 'docker compose up --build -d'
+			}
+		}
+	}
+	post {
+		always {
+			cleanWs()
 		}
 	}
 }
