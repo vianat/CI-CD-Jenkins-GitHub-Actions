@@ -42,7 +42,6 @@ pipeline {
 						}
 					}
 				}
-
 				stage('Unit Tests - Frontend') {
 					agent {
 						docker {
@@ -110,14 +109,14 @@ pipeline {
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'tests-e2e/playwright-report',
+						reportDir: 'tests-api/playwright-report',
 						reportFiles: 'index.html',
 						reportName: 'e2e playwright test report'
 					])
 				}
 			}
 		}
-		stage('e2e test ') {
+		stage('e2e test') {
 			agent {
 				docker {
 					image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
@@ -134,12 +133,12 @@ pipeline {
 			}
 			post {
 				always {
-					junit 'tests-api/test-results/results.xml'
+					junit 'tests-e2e/test-results/results.xml'
 					publishHTML(target: [
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'tests-api/playwright-report',
+						reportDir: 'tests-e2e/playwright-report',
 						reportFiles: 'index.html',
 						reportName: 'api playwright test report'
 					])
