@@ -88,7 +88,7 @@ pipeline {
 				sh 'docker compose up --build -d'
 			}
 		}
-		stage('API test') {
+		stage('API test using playwright') {
 			agent {
 				docker {
 					image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
@@ -101,6 +101,19 @@ pipeline {
 					sh 'npx wait-port http://localhost:8080/api/health -t 30000'
 					sh 'npx ci'
 					sh 'npx playwright test'
+				}
+			}
+			post {
+				always {
+					junit 'tests-api/test-results/results.xml'
+					publishHTML(target: [
+						allowMissing: false,
+						alwaysLinkToLastBuild: true,
+						keepAll: true,
+						reportDir: 'tests-api/playwright-report',
+						reportFiles: 'index.html',
+						reportName: 'api playwright test report'
+					])
 				}
 			}
 		}
