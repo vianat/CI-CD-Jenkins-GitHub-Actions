@@ -17,7 +17,7 @@ jobs:
   unit-tests-backend:
     runs-on: ubuntu-latest
     outputs:
-      coverage: ${{step.test-backend.outputs.report}}
+      coverage: ${{ steps.test-backend.outputs.report }}
     steps:
       - uses: actions/checkout@v4
       - name: set up Go
@@ -87,18 +87,19 @@ jobs:
           reporter: jest-junit
 
   create-coverage-comment:
-    if: github.even_name == 'pull_request'
+    if: github.event_name == 'pull_request'
     needs: [unit-tests-backend]
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
     steps:
       - name: create backend coverage comment
-        uses: peter/evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body:
-            ## backend test coverage report
+          body: |
+            ## Backend Test Coverage Report
+            
             ```
             ${{ needs.unit-tests-backend.outputs.coverage }}
             ```
