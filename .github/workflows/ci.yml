@@ -58,7 +58,7 @@ jobs:
 
       - name: publish frontend test results
         uses: dorny/test-reporter@v1
-        if : always()
+        if: always()
         with:
           name: frontend tests report
           path: bugtracker-frontend/test-results.xml
