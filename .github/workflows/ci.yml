@@ -27,6 +27,12 @@ jobs:
       - name: execute backend unit test
         working-directory: ./bugtracker-backend
         run: |
+          go test -coverprofile=coverage.out -covermode=atomic ./...
+          go tool cover -func=coverage.out > coverage.txt
+          echo "## Go test coverage report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat coverage.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
           go test ./... -v 2>&1 | go-junit-report > test-results.xml
 
       - name: publish backend tests results
@@ -54,7 +60,11 @@ jobs:
         working-directory: ./bugtracker-frontend
         run: |
           npm ci
-          npm test
+          npm test | tee full_output.txt
+          echo "## frontend coverage report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat full_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: publish frontend test results
         uses: dorny/test-reporter@v1
