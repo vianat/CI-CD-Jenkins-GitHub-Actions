@@ -158,3 +158,11 @@ jobs:
         with:
           name: api-test-playwright-report
           path: ./tests-api/playwright-report/
+
+      - name: publish api tests results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: api-test-report
+          path: ./tests-api/test-results/*.xml
+          reporter: jest-junit
