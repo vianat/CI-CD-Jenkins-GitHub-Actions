@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
-        uses: actions/chekpout@v4
+        uses: actions/checkout@v4
 
       - name: launch app
         run: |
