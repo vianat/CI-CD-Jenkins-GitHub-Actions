@@ -140,3 +140,21 @@ jobs:
         run: |
           npm ci
           npm playwright test
+
+      - name: turn down app
+        run: |
+          docker compose down
+
+      - name: upload api tests results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: ./tests-api/test-results/
+
+      - name: upload api tests playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-playwright-report
+          path: ./tests-api/playwright-report/
